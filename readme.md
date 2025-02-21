@@ -28,10 +28,12 @@ This tool can parse the following markdown elements:
 
 ## Installation
 
-To install mdr, you can use Cargo:
+For now, to install mdr, you need to clone the repository and build it manually:
 
 ```bash
-cargo install mdr
+git clone https://github.com/yourusername/mdr.git
+cd mdr
+cargo build --release
 ```
 
 ## Usage

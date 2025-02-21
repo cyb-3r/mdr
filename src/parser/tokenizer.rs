@@ -17,6 +17,16 @@ pub struct Tokenizer {
     position: usize,
 }
 
+pub fn test_tokenizer(tokenizer: &mut Tokenizer) {
+    for token in tokenizer {
+        if token.chars().next().unwrap() == '\n' {
+            println!("{{\\n}} ");
+            continue;
+        }
+        print!("{{{}}} ", token);
+    }
+}
+
 impl Tokenizer {
     /// Creates a new `Tokenizer` instance.
     /// It takes a `String` and breaks it down into a 'Vec<char>' for easier processing.
@@ -29,7 +39,7 @@ impl Tokenizer {
 }
 
 fn is_word(c: char) -> bool {
-    !c.is_whitespace() && c != '*'
+    !c.is_whitespace() && c != '*' && c != '[' && c != ']' && c != '(' && c != ')'
 }
 
 impl Iterator for Tokenizer {
@@ -42,6 +52,10 @@ impl Iterator for Tokenizer {
          */
 
         while self.position < self.text.len() && self.text[self.position].is_whitespace() {
+            if self.text[self.position] == '\n' {
+                self.position += 1;
+                return Some(String::from("\n"));
+            }
             self.position += 1;
         }
 
@@ -50,7 +64,7 @@ impl Iterator for Tokenizer {
         }
 
         match self.text[self.position] {
-            '*' => {
+            '*' | '[' | ']' | '(' | ')' => {
                 let pos = self.position;
                 self.position += 1;
                 return Some(self.text[pos].to_string());

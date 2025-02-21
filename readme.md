@@ -1,8 +1,13 @@
 # mdr
 
+## Disclaimer
+
+If the content of the readme is subject to frequent weird changes,
+it's because I'm just testing the parser on it.
+
 ## Description
 
-mdr, which stands for markdown renderer, is a simple markdown parser written in Rust.
+*mdr*, which stands for markdown renderer, is a simple markdown parser written in Rust.
 It supports basic markdown syntax and follows the [CommonMark Specs](https://spec.commonmark.org/0.31.2/) (0.31.2).
 
 I have made this project mostly to learn the Rust programming language.
@@ -11,7 +16,7 @@ So if you are expecting that, there are probably better tools out there.
 
 ## Current Features
 
-This *tool* can parse the following markdown elements:
+This tool can parse the following markdown elements:
 
 - Headings
 - Paragraphs

@@ -15,15 +15,17 @@
 pub struct Tokenizer {
     text: Vec<char>,
     position: usize,
-    offset: usize,
+    col: usize,
+    line: usize,
 }
 
 /// This is the `Token` struct.
-/// It owns a `String` and an `usize` representing the column offset.
+/// It owns a `String` and two `usize` representing the column offset and line number.
 /// It is not meant to be used on its own.
 pub struct Token {
     content: String,
-    col_offset: usize,
+    col: usize,
+    line: usize,
 }
 
 pub fn test_tokenizer(tokenizer: &mut Tokenizer) {
@@ -43,25 +45,27 @@ impl Tokenizer {
         Tokenizer {
             text: text.chars().collect(),
             position: 0,
-            offset: 0,
+            col: 0,
+            line: 0,
         }
     }
 }
 
 impl Token {
     /// Creates a new `Token` instance.
-    /// It takes a `String` and an `usize` representing the column offset.
-    pub fn new(content: String, col_offset: usize) -> Self {
-        Token {
-            content,
-            col_offset,
-        }
+    /// It takes a `String`, an `usize` representing the column offset, and an `usize` representing the line number.
+    pub fn new(content: String, col: usize, line: usize) -> Self {
+        Token { content, col, line }
     }
 }
 
 impl std::fmt::Display for Token {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "[\"{}\" | {}]", self.content, self.col_offset)
+        write!(
+            f,
+            "[\"{}\" | (l:{}, c:{})]",
+            self.content, self.line, self.col
+        )
     }
 }
 
@@ -69,8 +73,8 @@ impl std::fmt::Debug for Token {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "Token {{ content: {:?}, col_offset: {} }}",
-            self.content, self.col_offset
+            "Token {{ content: {:?}, col: {}, line: {} }}",
+            self.content, self.line, self.col
         )
     }
 }
@@ -90,11 +94,12 @@ impl Iterator for Tokenizer {
         while self.position < self.text.len() && self.text[self.position].is_whitespace() {
             if self.text[self.position] == '\n' {
                 self.position += 1;
-                self.offset = 0;
-                return Some(Token::new(String::from("\n"), self.offset));
+                self.col = 0;
+                self.line += 1;
+                return Some(Token::new(String::from("\n"), self.col, self.line));
             }
             self.position += 1;
-            self.offset += 1;
+            self.col += 1;
         }
 
         if self.position >= self.text.len() {
@@ -102,21 +107,22 @@ impl Iterator for Tokenizer {
         }
 
         match self.text[self.position] {
-            '*' | '[' | ']' | '(' | ')' => {
-                let (pos, line_pos) = (self.position, self.offset);
+            '*' | '[' | ']' | '(' | ')' | '{' | '}' => {
+                let (pos, col, line) = (self.position, self.col, self.line);
                 self.position += 1;
-                self.offset += 1;
-                return Some(Token::new(self.text[pos].to_string(), line_pos));
+                self.col += 1;
+                return Some(Token::new(self.text[pos].to_string(), col, line));
             }
             _ => {
-                let (start, line_pos) = (self.position, self.offset);
+                let (start, col, line) = (self.position, self.col, self.line);
                 while self.position < self.text.len() && is_word(self.text[self.position]) {
                     self.position += 1;
-                    self.offset += 1;
+                    self.col += 1;
                 }
                 return Some(Token::new(
                     self.text[start..self.position].into_iter().collect(),
-                    line_pos,
+                    col,
+                    line,
                 ));
             }
         }

@@ -16,14 +16,15 @@ So if you are expecting that, there are probably better tools out there.
 
 ## Current Features
 
-This tool can parse the following markdown elements:
+- Prints the results on the terminal by default;
 
-- Headings
-- Paragraphs
+- Can parse the following markdown elements:
+
+  - None because I'm working on the tokenizer!
 
 ## Future Features
 
-- CLI arguments to pick a preferred markdown flavor (maybe)
+- CLI arguments to pick a preferred markdown flavor (not sure because of the markdown specs)
 - Support for more markdown elements
 
 ## Installation

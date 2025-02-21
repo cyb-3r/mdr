@@ -1,6 +1,6 @@
 /// This is the `Tokenizer` struct.
 /// It owns a `Vec<char>` and iterates over the `char`acters to tokenize the input text.
-/// This one is optimized for the markdown syntax!
+/// It also keeps track of the current position in the document and offset from the beginning of a line.
 ///
 /// # Example
 /// ```
@@ -15,15 +15,24 @@
 pub struct Tokenizer {
     text: Vec<char>,
     position: usize,
+    offset: usize,
+}
+
+/// This is the `Token` struct.
+/// It owns a `String` and an `usize` representing the column offset.
+/// It is not meant to be used on its own.
+pub struct Token {
+    content: String,
+    col_offset: usize,
 }
 
 pub fn test_tokenizer(tokenizer: &mut Tokenizer) {
     for token in tokenizer {
-        if token.chars().next().unwrap() == '\n' {
-            println!("{{\\n}} ");
+        if token.content.chars().next().unwrap() == '\n' {
+            println!("(\\n) ");
             continue;
         }
-        print!("{{{}}} ", token);
+        print!("{} ", token);
     }
 }
 
@@ -34,29 +43,58 @@ impl Tokenizer {
         Tokenizer {
             text: text.chars().collect(),
             position: 0,
+            offset: 0,
         }
     }
 }
 
+impl Token {
+    /// Creates a new `Token` instance.
+    /// It takes a `String` and an `usize` representing the column offset.
+    pub fn new(content: String, col_offset: usize) -> Self {
+        Token {
+            content,
+            col_offset,
+        }
+    }
+}
+
+impl std::fmt::Display for Token {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "[\"{}\" | {}]", self.content, self.col_offset)
+    }
+}
+
+impl std::fmt::Debug for Token {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "Token {{ content: {:?}, col_offset: {} }}",
+            self.content, self.col_offset
+        )
+    }
+}
+
+fn is_special_char(c: char) -> bool {
+    matches!(c, '*' | '[' | ']' | '(' | ')' | '{' | '}')
+}
+
 fn is_word(c: char) -> bool {
-    !c.is_whitespace() && c != '*' && c != '[' && c != ']' && c != '(' && c != ')'
+    !c.is_whitespace() && !is_special_char(c)
 }
 
 impl Iterator for Tokenizer {
-    type Item = String;
+    type Item = Token;
 
     fn next(&mut self) -> Option<Self::Item> {
-        /* NOTE:
-         * while in normal mode, the tokenizer should count whitespace characters
-         * because 2 spaces define a new line based on the common mark specs.
-         */
-
         while self.position < self.text.len() && self.text[self.position].is_whitespace() {
             if self.text[self.position] == '\n' {
                 self.position += 1;
-                return Some(String::from("\n"));
+                self.offset = 0;
+                return Some(Token::new(String::from("\n"), self.offset));
             }
             self.position += 1;
+            self.offset += 1;
         }
 
         if self.position >= self.text.len() {
@@ -65,16 +103,21 @@ impl Iterator for Tokenizer {
 
         match self.text[self.position] {
             '*' | '[' | ']' | '(' | ')' => {
-                let pos = self.position;
+                let (pos, line_pos) = (self.position, self.offset);
                 self.position += 1;
-                return Some(self.text[pos].to_string());
+                self.offset += 1;
+                return Some(Token::new(self.text[pos].to_string(), line_pos));
             }
             _ => {
-                let start = self.position;
+                let (start, line_pos) = (self.position, self.offset);
                 while self.position < self.text.len() && is_word(self.text[self.position]) {
                     self.position += 1;
+                    self.offset += 1;
                 }
-                return Some(self.text[start..self.position].into_iter().collect());
+                return Some(Token::new(
+                    self.text[start..self.position].into_iter().collect(),
+                    line_pos,
+                ));
             }
         }
     }

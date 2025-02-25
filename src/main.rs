@@ -35,9 +35,11 @@ fn main() {
         }
     };
 
-    let content = std::fs::read_to_string(file_path).expect("Failed to read file");
+    // let content = std::fs::read_to_string(file_path).expect("Failed to read file");
+    let content = std::fs::read_to_string(file_path).unwrap();
+    println!("{}", content);
 
     println!("Tokenizer test:");
-    let mut tokenizer = Tokenizer::new(content);
-    parser::tokenizer::test_tokenizer(&mut tokenizer);
+    // let mut tokenizer = Tokenizer::new(String::from_utf8(content).unwrap());
+    // parser::tokenizer::test_tokenizer(&mut tokenizer);
 }

@@ -1,3 +1,27 @@
+mod token;
+use token::Token;
+
+fn is_special_char(c: char) -> bool {
+    matches!(c, '*' | '[' | ']' | '(' | ')' | '{' | '}')
+}
+
+fn is_word(c: char) -> bool {
+    !c.is_whitespace() && !is_special_char(c)
+}
+
+pub enum TokenizerState {
+    Paragraph = 0,
+    Heading = 1,
+    List = 2,
+    Link = 3,
+}
+
+impl Default for TokenizerState {
+    fn default() -> Self {
+        Self::Paragraph
+    }
+}
+
 /// This is the `Tokenizer` struct.
 /// It owns a `Vec<char>` and iterates over the `char`acters to tokenize the input text.
 /// It also keeps track of the current position in the document and offset from the beginning of a line.
@@ -19,25 +43,6 @@ pub struct Tokenizer {
     line: usize,
 }
 
-/// This is the `Token` struct.
-/// It owns a `String` and two `usize` representing the column offset and line number.
-/// It is not meant to be used on its own.
-pub struct Token {
-    content: String,
-    col: usize,
-    line: usize,
-}
-
-pub fn test_tokenizer(tokenizer: &mut Tokenizer) {
-    for token in tokenizer {
-        if token.content.chars().next().unwrap() == '\n' {
-            println!("(\\n) ");
-            continue;
-        }
-        print!("{} ", token);
-    }
-}
-
 impl Tokenizer {
     /// Creates a new `Tokenizer` instance.
     /// It takes a `String` and breaks it down into a 'Vec<char>' for easier processing.
@@ -49,42 +54,6 @@ impl Tokenizer {
             line: 0,
         }
     }
-}
-
-impl Token {
-    /// Creates a new `Token` instance.
-    /// It takes a `String`, an `usize` representing the column offset, and an `usize` representing the line number.
-    pub fn new(content: String, col: usize, line: usize) -> Self {
-        Token { content, col, line }
-    }
-}
-
-impl std::fmt::Display for Token {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "[\"{}\" | (l:{}, c:{})]",
-            self.content, self.line, self.col
-        )
-    }
-}
-
-impl std::fmt::Debug for Token {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "Token {{ content: {:?}, col: {}, line: {} }}",
-            self.content, self.line, self.col
-        )
-    }
-}
-
-fn is_special_char(c: char) -> bool {
-    matches!(c, '*' | '[' | ']' | '(' | ')' | '{' | '}')
-}
-
-fn is_word(c: char) -> bool {
-    !c.is_whitespace() && !is_special_char(c)
 }
 
 impl Iterator for Tokenizer {
@@ -107,7 +76,7 @@ impl Iterator for Tokenizer {
         }
 
         match self.text[self.position] {
-            '*' | '[' | ']' | '(' | ')' | '{' | '}' => {
+            '*' => {
                 let (pos, col, line) = (self.position, self.col, self.line);
                 self.position += 1;
                 self.col += 1;

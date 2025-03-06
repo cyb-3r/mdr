@@ -17,9 +17,7 @@ So if you are expecting that, there are probably better tools out there.
 ## Current Features
 
 - Prints the results on the terminal by default;
-
 - Can parse the following markdown elements:
-
   - None because I'm working on the tokenizer!
 
 ## Future Features

@@ -30,7 +30,7 @@ impl Config {
 
 pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
     let content = fs::read_to_string(config.file_path)?;
-    let doc: Block = block::split_block(content);
-    println!("{:?}", doc);
+    let doc: Block = Block::split_block(content);
+    println!("{:#?}", doc);
     Ok(())
 }
